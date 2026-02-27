@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="styles.css" />
+    <title>Gestão de Pedidos</title>
+</head>
+
+<body>
+
+    <header class="header">
+        <h1> Gestão de Pedidos. </h1>
+        <nav class="tabs">
+            <button type="button" class="tab active" data-tab="shop"> Produtos </button>
+            <button type="button" class="tab" data-tab="orders"> Pedidos </button>
+        </nav>
+    </header>
+
+    <main class="container">
+        <!-- TAB: Produtos -->
+        <section id="tab-shop" class="tab-panel active">
+            <div class="grid">
+                <section class="card">
+                    <h2>Produtos</h2>
+
+                    <div class="filters">
+                        <input id="searchName" type="search" placeholder="Buscar por nome..." />
+                        <select id="filterCategory">
+                            <option value="">Todas as categorias</option>
+                        </select>
+
+                        <label class="toggle">
+                            <input id="onlyActive" type="checkbox" checked />
+                            <span>Somente ativos</span>
+                        </label>
+
+                        <button id="btnReloadProducts" class="btn">Recarregar</button>
+                    </div>
+
+                    <div id="productsList" class="list"></div>
+                </section>
+
+                <aside class="card">
+                    <h2>Carrinho</h2>
+                    <div id="cartList" class="list"></div>
+
+                    <div class="totals">
+                        <div><span>Total:</span> <strong id="cartTotal">R$ 0,00</strong></div>
+                    </div>
+
+                    <div class="checkout">
+                        <h3>Finalizar Pedido</h3>
+
+                        <label class="field">
+                            <span>Customer ID</span>
+                            <input id="customerId" type="number" min="1" value="1" />
+                        </label>
+
+                        <button id="btnCheckout" class="btn primary">Finalizar Pedido</button>
+
+                        <p id="checkoutMsg" class="msg"></p>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- TAB: Pedidos -->
+        <section id="tab-orders" class="tab-panel">
+            <div class="grid">
+                <section class="card">
+                    <h2>Últimos pedidos</h2>
+                    <button id="btnReloadOrders" class="btn">Recarregar</button>
+                    <div id="ordersList" class="list"></div>
+                </section>
+
+                <section class="card">
+                    <h2>Detalhe do pedido</h2>
+                    <div id="orderDetail" class="detail">
+                        <p class="muted">Clique em um pedido para ver os detalhes.</p>
+                    </div>
+                </section>
+            </div>
+        </section>
+    </main>
+
+
+    <script src="app.js"></script>
+
+</body>
+</html>
