@@ -14,7 +14,7 @@ public class Payment {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-    // opção simples: guarda só o ID do pedido
+    // simple approach: store only the order ID
     @Column(name = "order_id", nullable = false)
     private Integer orderId;
 

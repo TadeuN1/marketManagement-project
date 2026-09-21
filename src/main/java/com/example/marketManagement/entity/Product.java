@@ -8,7 +8,7 @@ import jakarta.persistence.*;
 @Table(name = "products")
 public class Product {
 
-    // Criação de atributos a serem inseridos na tabela nomeada anteriormente.
+    // attributes mapped to the table columns declared above
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
@@ -21,7 +21,7 @@ public class Product {
     @Column(nullable = false)
     private Boolean active;
 
-    // Os Setters e Getters foram criados manualmente para incrementação de valor e retorno do valor criados.
+    // manual getters/setters for value access and updates
 
     public Integer getId() {
         return id;

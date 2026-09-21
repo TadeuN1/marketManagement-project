@@ -38,13 +38,13 @@ public class PaymentService {
 
     @Transactional
     public CreatePaymentResponse register(CreatePaymentRequest req) {
-        if (req == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Body inválido");
-        if (req.getOrderId() == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "orderId é obrigatório");
-        if (req.getMethod() == null || req.getMethod().isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "method é obrigatório");
-        if (req.getAmountCents() == null || req.getAmountCents() < 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "amountCents deve ser >= 0");
+        if (req == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid body");
+        if (req.getOrderId() == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "orderId is required");
+        if (req.getMethod() == null || req.getMethod().isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "method is required");
+        if (req.getAmountCents() == null || req.getAmountCents() < 0) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "amountCents must be >= 0");
 
         Order order = orderRepository.findById(req.getOrderId())
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
         int orderTotal = calculateOrderTotal(order.getItems());
 

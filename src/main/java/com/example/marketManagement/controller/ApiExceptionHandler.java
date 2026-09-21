@@ -29,7 +29,7 @@ public class ApiExceptionHandler {
         ApiError body = new ApiError(
                 400,
                 "Bad Request",
-                "JSON inválido no body da requisição",
+                "Invalid JSON in request body",
                 req.getRequestURI()
         );
         return ResponseEntity.status(400).body(body);
@@ -40,7 +40,7 @@ public class ApiExceptionHandler {
         ApiError body = new ApiError(
                 500,
                 "Internal Server Error",
-                "Erro inesperado",
+                "Unexpected error",
                 req.getRequestURI()
         );
         return ResponseEntity.status(500).body(body);

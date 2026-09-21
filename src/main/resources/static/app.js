@@ -1,11 +1,11 @@
-const API = ""; // mesmo host (Spring serve / e endpoints /products etc.)
+const API = ""; // same host (Spring serves / plus endpoints like /products)
 
 // ---------- helpers ----------
 const qs = (s) => document.querySelector(s);
 
-function formatBRLFromCents(cents) {
+function formatMoneyFromCents(cents) {
   const value = (cents || 0) / 100;
-  return value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+  return value.toLocaleString("en-US", { style: "currency", currency: "BRL" });
 }
 
 function setMsg(el, text) {
@@ -15,7 +15,7 @@ function setMsg(el, text) {
 async function apiGet(path) {
   const res = await fetch(API + path);
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw data || { message: "Erro inesperado" };
+  if (!res.ok) throw data || { message: "Unexpected error" };
   return data;
 }
 
@@ -26,19 +26,25 @@ async function apiPost(path, body) {
     body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => null);
-  if (!res.ok) throw data || { message: "Erro inesperado" };
+  if (!res.ok) throw data || { message: "Unexpected error" };
   return data;
 }
 
-// ---------- Tabs ----------
-document.querySelectorAll(".tab").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".tab").forEach((b) => b.classList.remove("active"));
-    document.querySelectorAll(".tab-panel").forEach((p) => p.classList.remove("active"));
+// ---------- Tabs (persisted across reloads) ----------
+const TAB_KEY = "mm_tab_v1";
 
-    btn.classList.add("active");
-    qs(`#tab-${btn.dataset.tab}`).classList.add("active");
-  });
+function activateTab(name) {
+  document.querySelectorAll(".tab").forEach((b) => b.classList.toggle("active", b.dataset.tab === name));
+  document.querySelectorAll(".tab-panel").forEach((p) => p.classList.toggle("active", p.id === `tab-${name}`));
+  try {
+    localStorage.setItem(TAB_KEY, name);
+  } catch {
+    // private mode etc. — tabs just won't persist
+  }
+}
+
+document.querySelectorAll(".tab").forEach((btn) => {
+  btn.addEventListener("click", () => activateTab(btn.dataset.tab));
 });
 
 // ---------- Cart (local) ----------
@@ -58,6 +64,10 @@ function saveCart(items) {
 
 function cartTotalCents(cart) {
   return cart.reduce((sum, i) => sum + i.quantity * i.priceCents, 0);
+}
+
+function cartCount(cart) {
+  return cart.reduce((sum, i) => sum + i.quantity, 0);
 }
 
 function upsertCartItem(product, quantity) {
@@ -98,7 +108,7 @@ function uniqueCategories(products) {
 
 function fillCategories(products) {
   const cats = uniqueCategories(products);
-  filterCategoryEl.innerHTML = `<option value="">Todas as categorias</option>` + cats.map(c => `<option value="${c}">${c}</option>`).join("");
+  filterCategoryEl.innerHTML = `<option value="">All categories</option>` + cats.map(c => `<option value="${c}">${c}</option>`).join("");
 }
 
 function applyProductFilters() {
@@ -117,14 +127,20 @@ function applyProductFilters() {
 function renderProducts() {
   const filtered = applyProductFilters();
 
+  if (filtered.length === 0) {
+    productsListEl.innerHTML = `<p class="muted">No products match these filters.</p>`;
+    return;
+  }
+
   productsListEl.innerHTML = filtered.map((p) => `
     <div class="row">
+      <div class="thumb" aria-hidden="true">${(p.name || "?").charAt(0).toUpperCase()}</div>
       <div>
         <h4>${p.name} <span class="pill">${p.category}</span></h4>
-        <div class="muted">${formatBRLFromCents(p.priceCents)} • ${p.active ? "Ativo" : "Inativo"}</div>
+        <div class="muted">${formatMoneyFromCents(p.priceCents)} • ${p.active ? "Active" : "Inactive"}</div>
       </div>
       <div class="right">
-        <button class="btn" ${p.active ? "" : "disabled"} data-add="${p.id}">Adicionar</button>
+        <button class="btn" ${p.active ? "" : "disabled"} data-add="${p.id}">Add</button>
       </div>
     </div>
   `).join("");
@@ -142,14 +158,12 @@ async function loadProducts() {
   const onlyActive = onlyActiveEl.checked;
   const category = filterCategoryEl.value || "";
 
-  // 1) Preenche categorias só uma vez com TODOS os produtos
   if (!categoriesInitialized) {
-    const initData = await apiGet("/products"); // ✅ sem active/category
+    const initData = await apiGet("/products");
     fillCategories(initData);
     categoriesInitialized = true;
   }
 
-  // 2) Agora carrega com os filtros escolhidos
   const params = new URLSearchParams();
   if (category) params.set("category", category);
   params.set("active", String(onlyActive));
@@ -160,9 +174,6 @@ async function loadProducts() {
   renderProducts();
 }
 
-
-
-
 qs("#btnReloadProducts").addEventListener("click", loadProducts);
 searchNameEl.addEventListener("input", () => renderProducts());
 filterCategoryEl.addEventListener("change", loadProducts);
@@ -171,16 +182,18 @@ onlyActiveEl.addEventListener("change", loadProducts);
 // ---------- Cart UI ----------
 const cartListEl = qs("#cartList");
 const cartTotalEl = qs("#cartTotal");
+const cartCountEl = qs("#cartCount");
 const checkoutMsgEl = qs("#checkoutMsg");
 
 function renderCart() {
   const cart = loadCart();
   const total = cartTotalCents(cart);
 
-  cartTotalEl.textContent = formatBRLFromCents(total);
+  cartTotalEl.textContent = formatMoneyFromCents(total);
+  cartCountEl.textContent = `${cartCount(cart)} item${cartCount(cart) === 1 ? "" : "s"}`;
 
   if (cart.length === 0) {
-    cartListEl.innerHTML = `<p class="muted">Carrinho vazio.</p>`;
+    cartListEl.innerHTML = `<p class="muted">Cart is empty.</p>`;
     return;
   }
 
@@ -188,12 +201,12 @@ function renderCart() {
     <div class="row">
       <div>
         <h4>${i.name}</h4>
-        <div class="muted">${formatBRLFromCents(i.priceCents)} • Subtotal: <strong>${formatBRLFromCents(i.priceCents * i.quantity)}</strong></div>
+        <div class="muted">${formatMoneyFromCents(i.priceCents)} • Subtotal: <strong>${formatMoneyFromCents(i.priceCents * i.quantity)}</strong></div>
       </div>
       <div class="right">
         <div class="qty">
-          <span class="muted">Qtd</span>
-          <input type="number" min="0" value="${i.quantity}" data-qty="${i.productId}" />
+          <span class="muted">Qty</span>
+          <input type="number" min="0" value="${i.quantity}" data-qty="${i.productId}" aria-label="Quantity for ${i.name}" />
         </div>
       </div>
     </div>
@@ -215,13 +228,13 @@ qs("#btnCheckout").addEventListener("click", async () => {
 
   const cart = loadCart();
   if (cart.length === 0) {
-    setMsg(checkoutMsgEl, "Carrinho vazio.");
+    setMsg(checkoutMsgEl, "Cart is empty.");
     return;
   }
 
   const customerId = Number(qs("#customerId").value);
   if (!customerId || customerId <= 0) {
-    setMsg(checkoutMsgEl, "Customer ID inválido.");
+    setMsg(checkoutMsgEl, "Invalid customer ID.");
     return;
   }
 
@@ -232,11 +245,11 @@ qs("#btnCheckout").addEventListener("click", async () => {
 
   try {
     const res = await apiPost("/orders", body);
-    setMsg(checkoutMsgEl, `Pedido criado! Número: ${res.orderId} • Total: ${formatBRLFromCents(res.totalCents)}`);
+    setMsg(checkoutMsgEl, `Order placed! #${res.orderId} • Total: ${formatMoneyFromCents(res.totalCents)}`);
     clearCart();
     await loadOrders();
   } catch (err) {
-    setMsg(checkoutMsgEl, err.message || "Erro ao criar pedido.");
+    setMsg(checkoutMsgEl, err.message || "Failed to create order.");
   }
 });
 
@@ -247,14 +260,19 @@ const orderDetailEl = qs("#orderDetail");
 async function loadOrders() {
   const orders = await apiGet("/orders");
 
+  if (orders.length === 0) {
+    ordersListEl.innerHTML = `<p class="muted">No orders yet — place one in the Shop tab.</p>`;
+    return;
+  }
+
   ordersListEl.innerHTML = orders.map((o) => `
     <div class="row">
       <div>
-        <h4>Pedido #${o.id}<span class="pill">${o.status}</span></h4>
-        <div class="muted">${o.createdAt} • Total: <strong>${formatBRLFromCents(o.totalCents)}</strong></div>
+        <h4>Order #${o.id} <span class="pill status-${String(o.status).toLowerCase()}">${o.status}</span></h4>
+        <div class="muted">${o.createdAt} • Total: <strong>${formatMoneyFromCents(o.totalCents)}</strong></div>
       </div>
       <div class="right">
-        <button class="btn" data-order="${o.id}">Ver</button>
+        <button class="btn" data-order="${o.id}">View</button>
       </div>
     </div>
   `).join("");
@@ -273,22 +291,22 @@ async function loadOrderDetail(id) {
   orderDetailEl.innerHTML = `
     <div class="row">
       <div>
-        <h4>Pedido #${o.id} <span class="pill">${o.status}</span></h4>
-        <div class="muted">Cliente: ${o.customerId} • ${o.createdAt}</div>
-        <div class="muted">Total: <strong>${formatBRLFromCents(o.totalCents)}</strong></div>
+        <h4>Order #${o.id} <span class="pill status-${String(o.status).toLowerCase()}">${o.status}</span></h4>
+        <div class="muted">Customer: ${o.customerId} • ${o.createdAt}</div>
+        <div class="muted">Total: <strong>${formatMoneyFromCents(o.totalCents)}</strong></div>
       </div>
     </div>
 
-    <h3 style="margin-top: 12px;">Itens</h3>
+    <h3 style="margin-top: 12px;">Items</h3>
     <div class="list">
       ${o.items.map(i => `
         <div class="row">
           <div>
-            <h4>Produto ${i.productId}</h4>
-            <div class="muted">Qtd: ${i.quantity} • Unit: ${formatBRLFromCents(i.unitPriceCents)}</div>
+            <h4>Product ${i.productId}</h4>
+            <div class="muted">Qty: ${i.quantity} • Unit: ${formatMoneyFromCents(i.unitPriceCents)}</div>
           </div>
           <div class="right">
-            <div><strong>${formatBRLFromCents(i.subtotalCents)}</strong></div>
+            <div><strong>${formatMoneyFromCents(i.subtotalCents)}</strong></div>
           </div>
         </div>
       `).join("")}
@@ -298,7 +316,51 @@ async function loadOrderDetail(id) {
 
 qs("#btnReloadOrders").addEventListener("click", loadOrders);
 
-// ---------- init ----------
-renderCart();
-loadProducts().catch(() => {});
-loadOrders().catch(() => {});
+// ---------- init (resilient: cold starts can be slow, so retry instead of going blank) ----------
+async function withRetry(fn, attempts = 3) {
+  let lastErr;
+  for (let i = 0; i < attempts; i++) {
+    try {
+      return await fn();
+    } catch (err) {
+      lastErr = err;
+      await new Promise((r) => setTimeout(r, 700 * (i + 1)));
+    }
+  }
+  throw lastErr;
+}
+
+function bindRetryButtons() {
+  document.querySelectorAll("[data-retry]").forEach((b) =>
+    b.addEventListener("click", () => void initLoad())
+  );
+}
+
+async function initLoad() {
+  productsListEl.innerHTML = `<p class="muted">Loading products…</p>`;
+  ordersListEl.innerHTML = `<p class="muted">Loading orders…</p>`;
+  const [products, orders] = await Promise.allSettled([
+    withRetry(loadProducts),
+    withRetry(loadOrders),
+  ]);
+  if (products.status === "rejected") {
+    productsListEl.innerHTML = `<p class="muted">Could not load products. <button class="btn" type="button" data-retry>Retry</button></p>`;
+  }
+  if (orders.status === "rejected") {
+    ordersListEl.innerHTML = `<p class="muted">Could not load orders. <button class="btn" type="button" data-retry>Retry</button></p>`;
+  }
+  bindRetryButtons();
+}
+
+(function init() {
+  let savedTab = "shop";
+  try {
+    const stored = localStorage.getItem(TAB_KEY);
+    if (stored === "shop" || stored === "orders") savedTab = stored;
+  } catch {
+    // ignore — default to shop
+  }
+  activateTab(savedTab);
+  renderCart();
+  void initLoad();
+})();

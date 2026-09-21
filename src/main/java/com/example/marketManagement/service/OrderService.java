@@ -33,19 +33,19 @@ public class OrderService {
 
     public CreateOrderResponse createOrder(CreateOrderRequest request) {
         if (request == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Body inválido");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid body");
         }
         if (request.getCustomerId() == null) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "customerId é obrigatório");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "customerId is required");
         }
         if (request.getItems() == null || request.getItems().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Pedido precisa ter ao menos 1 item");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order must have at least 1 item");
         }
 
         // valida cliente
         boolean customerExists = customerRepository.existsById(request.getCustomerId());
         if (!customerExists) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cliente não encontrado");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Customer not found");
         }
 
         // cria Order
@@ -58,20 +58,20 @@ public class OrderService {
 
         for (CreateOrderItemRequest itemReq : request.getItems()) {
             if (itemReq.getProductId() == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "productId é obrigatório");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "productId is required");
             }
             if (itemReq.getQuantity() == null || itemReq.getQuantity() <= 0) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "quantity deve ser > 0");
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "quantity must be > 0");
             }
 
             Product product = productRepository.findById(itemReq.getProductId())
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Produto não encontrado: " + itemReq.getProductId()));
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product not found: " + itemReq.getProductId()));
 
             if (product.getActive() == null || !product.getActive()) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Produto inativo: " + itemReq.getProductId());
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Inactive product: " + itemReq.getProductId());
             }
 
-            // preço vem do banco
+            // price comes from the database
             int unitPrice = (product.getPriceCents() == null) ? 0 : product.getPriceCents();
 
             OrderItem oi = new OrderItem();
@@ -109,7 +109,7 @@ public class OrderService {
 
     public OrderDetailDTO getDetail(Integer id) {
         Order order = orderRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Pedido não encontrado"));
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
         var safeItems = (order.getItems() == null) ? List.<OrderItem>of() : order.getItems();
 

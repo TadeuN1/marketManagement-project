@@ -4,89 +4,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="styles.css" />
-    <title>Gestão de Pedidos</title>
+    <meta name="description" content="MarketDesk demo store: browse products, check out, and track orders.">
+    <link rel="stylesheet" href="styles.css?v=2" />
+    <link rel="icon" href="favicon.ico" />
+    <title>MarketDesk | Store & Orders</title>
 </head>
 
 <body>
 
     <header class="header">
-        <h1> Gestão de Pedidos. </h1>
-        <nav class="tabs">
-            <button type="button" class="tab active" data-tab="shop"> Produtos </button>
-            <button type="button" class="tab" data-tab="orders"> Pedidos </button>
+        <div class="brand">
+            <span class="brand-mark">M</span>
+            <div>
+                <h1>MarketDesk</h1>
+                <p class="tagline">Demo store & order tracker</p>
+            </div>
+        </div>
+        <nav class="tabs" aria-label="Sections">
+            <button type="button" class="tab active" data-tab="shop">Shop</button>
+            <button type="button" class="tab" data-tab="orders">Orders</button>
         </nav>
     </header>
 
     <main class="container">
-        <!-- TAB: Produtos -->
+        <!-- TAB: Shop -->
         <section id="tab-shop" class="tab-panel active">
             <div class="grid">
                 <section class="card">
-                    <h2>Produtos</h2>
+                    <div class="card-head">
+                        <h2>Products</h2>
+                        <button id="btnReloadProducts" class="btn ghost">Reload</button>
+                    </div>
 
                     <div class="filters">
-                        <input id="searchName" type="search" placeholder="Buscar por nome..." />
-                        <select id="filterCategory">
-                            <option value="">Todas as categorias</option>
+                        <input id="searchName" type="search" placeholder="Search by name..." aria-label="Search products by name" />
+                        <select id="filterCategory" aria-label="Filter by category">
+                            <option value="">All categories</option>
                         </select>
 
                         <label class="toggle">
                             <input id="onlyActive" type="checkbox" checked />
-                            <span>Somente ativos</span>
+                            <span>Active only</span>
                         </label>
-
-                        <button id="btnReloadProducts" class="btn">Recarregar</button>
                     </div>
 
                     <div id="productsList" class="list"></div>
                 </section>
 
-                <aside class="card">
-                    <h2>Carrinho</h2>
+                <aside class="card cart">
+                    <div class="card-head">
+                        <h2>Cart</h2>
+                        <span id="cartCount" class="pill">0 items</span>
+                    </div>
                     <div id="cartList" class="list"></div>
 
                     <div class="totals">
-                        <div><span>Total:</span> <strong id="cartTotal">R$ 0,00</strong></div>
+                        <div><span>Total:</span> <strong id="cartTotal">$0.00</strong></div>
                     </div>
 
                     <div class="checkout">
-                        <h3>Finalizar Pedido</h3>
+                        <h3>Checkout</h3>
 
                         <label class="field">
                             <span>Customer ID</span>
                             <input id="customerId" type="number" min="1" value="1" />
                         </label>
 
-                        <button id="btnCheckout" class="btn primary">Finalizar Pedido</button>
+                        <button id="btnCheckout" class="btn primary">Place order</button>
 
-                        <p id="checkoutMsg" class="msg"></p>
+                        <p id="checkoutMsg" class="msg" aria-live="polite"></p>
                     </div>
                 </aside>
             </div>
         </section>
 
-        <!-- TAB: Pedidos -->
+        <!-- TAB: Orders -->
         <section id="tab-orders" class="tab-panel">
             <div class="grid">
                 <section class="card">
-                    <h2>Últimos pedidos</h2>
-                    <button id="btnReloadOrders" class="btn">Recarregar</button>
+                    <div class="card-head">
+                        <h2>Recent orders</h2>
+                        <button id="btnReloadOrders" class="btn ghost">Reload</button>
+                    </div>
                     <div id="ordersList" class="list"></div>
                 </section>
 
                 <section class="card">
-                    <h2>Detalhe do pedido</h2>
+                    <h2>Order detail</h2>
                     <div id="orderDetail" class="detail">
-                        <p class="muted">Clique em um pedido para ver os detalhes.</p>
+                        <p class="muted">Select an order to see the details.</p>
                     </div>
                 </section>
             </div>
         </section>
     </main>
 
+    <footer class="footer">
+        <span>MarketDesk demo • Spring Boot + SQLite • Prices in BRL</span>
+    </footer>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=2"></script>
 
 </body>
 </html>
