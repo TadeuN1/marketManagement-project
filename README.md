@@ -11,14 +11,14 @@
 
 - Product catalog with price in cents and active flag
 - Order creation with items, quantities and snapshot unit prices
-- Order status flow (`NEW` → …) with detailed and summary views
+- Order status flow (`NEW` → `PAID` automatically once payments cover the total; `CANCELLED` exists in the model but has no endpoint yet) with detailed and summary views
 - Payment registration per order (e.g. PIX) with validation — including a negative-path example
 - Global error responses via a dedicated exception handler
 - Static HTML/JS UI served by the API itself for manual testing
 
 ## Tech Stack
 
-Java 17, Spring Boot 4 (Web MVC, Data JPA, Validation), Hibernate with SQLite dialect (`sqlite-jdbc`), H2 console (dev), Maven. Tests with JUnit 5 + Spring Boot Test.
+Java 17, Spring Boot 4 (Web MVC, Data JPA, Validation), Hibernate with SQLite dialect (`sqlite-jdbc`), H2 console (dev), Maven. Tests with JUnit 5 + Mockito (11 tests: context, order rules, payment rules).
 
 ## Run locally
 
@@ -38,17 +38,17 @@ cd marketManagement-project
 # list products
 curl http://localhost:8080/products
 
-# create an order (see examples/order.json)
+# create an order (see examples/order.json) — note the returned orderId
 curl -X POST http://localhost:8080/orders \
   -H 'Content-Type: application/json' \
   -d @examples/order.json
 
-# pay for order 3 with PIX (see examples/payment2.json)
+# pay for it with PIX — replace <id> with the orderId above
 curl -X POST http://localhost:8080/payments \
   -H 'Content-Type: application/json' \
-  -d @examples/payment2.json
+  -d '{"orderId": <id>, "method": "PIX", "amountCents": 9980}'
 
-# invalid payment example (non-existent order)
+# invalid payment example (non-existent order) — see examples/payment-bad.json
 curl -X POST http://localhost:8080/payments \
   -H 'Content-Type: application/json' \
   -d @examples/payment-bad.json
@@ -77,8 +77,8 @@ curl -X POST http://localhost:8080/payments \
 ## Roadmap
 
 - [x] Orders, payments and catalog with validation
-- [ ] Dockerfile + Compose for one-command run
-- [ ] More tests beyond context load
+- [x] Dockerfile + Compose for one-command run
+- [x] Unit tests for order and payment rules (Mockito)
 
 ## License
 
