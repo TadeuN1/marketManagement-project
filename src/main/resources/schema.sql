@@ -1,4 +1,4 @@
-REATE TABLE customers (
+CREATE TABLE customers (
      id INTEGER PRIMARY KEY,
      name VARCHAR(120) NOT NULL,
      email VARCHAR(160) UNIQUE NOT NULL,

@@ -1,0 +1,8 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      # SQLite lives in a plain file: persist it outside the container
+      - ./db:/app/db
